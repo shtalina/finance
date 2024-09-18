@@ -1,6 +1,8 @@
 import logo from './logo.svg';
 import './App.css';
-import React, { useState } from 'react';
+import React, { useState } from 'react'; 
+import RegForm from "./RegForm"
+import LogForm from './LogForm';
 
 const MyButton = ({ onClick, buttonText }) => {
   return (
@@ -36,6 +38,12 @@ function App() {
         <MyButton onClick={switchImageAndButton} buttonText={buttonText} />
         <br />
       </div>
+      <LogForm />
+      <br />
+      <br />
+      <RegForm />
+      <br />
+      <br />
     </div>
   );
 }
