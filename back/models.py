@@ -1,6 +1,6 @@
-from sqlalchemy import Integer, String, Column, Boolean, Float, ForeignKey
+from sqlalchemy import Integer, String, Column, Boolean, Float, ForeignKey, DateTime
 from database import Base
-
+import datetime
 
 # User (id, email, password, name)
 # Income (id, type, category_id, user_id, count )
@@ -15,24 +15,33 @@ class  User(Base):
     password = Column(String)
     is_active = Column(Boolean, default=True)
     state_id=Column(Integer, ForeignKey('app_states.id'), nullable=False)
+    
+    token = Column(String, default=None)
+    restore_token = Column(String, default=None)
+
+class UserLoggin(Base):
+    __tablename__ = "app_user_loggin"
+    id = Column(Integer, primary_key=True)
+    email = Column(String, index=True)
+    created_at = Column(DateTime)
 
 class  Income(Base):
     __tablename__ = "app_income"
     id = Column(Integer, primary_key=True)
     type = Column(String, nullable=False)  
     category_income_id = Column(Integer, ForeignKey('app_category_income.id'), nullable=False)  
-    user_id = Column(String, ForeignKey('app_users.id'), nullable=False)  
+    koshelka_id = Column(String, ForeignKey('app_koshelkas.id'), nullable=False)  
     count = Column(Float, nullable=False)
-    valuta_id=Column(Integer, ForeignKey('app_valuta.id'), nullable=False) 
+    created_at = Column(DateTime)
 
 class  Expenses(Base):
     __tablename__ = "app_expenses"
     id = Column(Integer, primary_key=True)
     type = Column(String, nullable=False)  
     category_expenses_id = Column(Integer, ForeignKey('app_category_income.id'), nullable=False)  
-    user_id = Column(String, ForeignKey('app_users.id'), nullable=False)  
+    koshelka_id = Column(String, ForeignKey('app_koshelkas.id'), nullable=False)  
     count = Column(Float, nullable=False)
-    valuta_id=Column(Integer, ForeignKey('app_valuta.id'), nullable=False) 
+    created_at = Column(DateTime)
  
 class  Category_income(Base):
     __tablename__ = "app_category_income"
