@@ -7,8 +7,6 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
 import IconifyIcon from 'components/base/IconifyIcon';
 import paths from 'routes/paths';
 
@@ -32,49 +30,19 @@ const Login = () => {
   return (
     <>
       <Typography align="center" variant="h3" fontWeight={600}>
-        LogIn
+        New password
       </Typography>
-      <Stack direction={{ xs: 'column', sm: 'row' }} mt={4} spacing={2} width={1}>
-        <Button
-          variant="contained"
-          color="primary"
-          fullWidth
-          startIcon={<IconifyIcon icon="uim:google" />}
-        >
-          Login with Google
-        </Button>
-        <Button
-          variant="contained"
-          color="secondary"
-          fullWidth
-          startIcon={<IconifyIcon icon="uim:apple" />}
-        >
-          Login with Apple
-        </Button>
-      </Stack>
-      <Divider sx={{ my: 3 }}>or Login with</Divider>
+      
+      <Divider sx={{ my: 3 }}>enter new password</Divider>
       <Stack onSubmit={handleSubmit} component="form" direction="column" gap={2}>
-        <TextField
-          id="email"
-          name="email"
-          type="email"
-          value={user.email}
-          onChange={handleInputChange}
-          variant="filled"
-          placeholder="Your Email"
-          autoComplete="email"
-          fullWidth
-          autoFocus
-          required
-        />
-        <TextField
+      <TextField
           id="password"
           name="password"
           type={showPassword ? 'text' : 'password'}
           value={user.password}
           onChange={handleInputChange}
           variant="filled"
-          placeholder="Your Password"
+          placeholder="Your New Password"
           autoComplete="current-password"
           fullWidth
           autoFocus
@@ -93,15 +61,6 @@ const Login = () => {
             ),
           }}
         />
-        <Stack mt={-1.5} alignItems="center" justifyContent="space-between">
-          <FormControlLabel
-            control={<Checkbox id="checkbox" name="checkbox" color="primary" />}
-            label="Remember me"
-          />
-          <Link href={paths.forgotPassword} fontSize="body2.fontSize" letterSpacing={0.5}>
-            Forgot password?
-          </Link>
-        </Stack>
         <Button type="submit" variant="contained" size="medium" fullWidth>
           Submit
         </Button>
@@ -112,7 +71,7 @@ const Login = () => {
           align="center"
           letterSpacing={0.5}
         >
-          Don't have an account? <Link href={paths.signup}>{'Signup'}</Link>
+          <Link href={paths.login}>{'Login'}</Link>
         </Typography>
       </Stack>
     </>

@@ -30,8 +30,8 @@ export default {
 - Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
 
 Cool things I did to make it work
-.\venv\Scripts\activate.bat
-cd fin-app
-npm install
-npm audit fix
-npm run dev
+- .\venv\Scripts\activate.bat
+- cd fin-app
+- npm install
+- npm audit fix
+- npm run dev
