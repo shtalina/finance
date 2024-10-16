@@ -10,22 +10,71 @@ import InputAdornment from '@mui/material/InputAdornment';
 import IconifyIcon from 'components/base/IconifyIcon';
 import paths from 'routes/paths';
 import { MenuItem, Select } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   [key: string]: string;
 }
 
 const Signup = () => {
-  const [user, setUser] = useState<User>({ name: '', email: '', password: '' });
+  const [user, setUser] = useState<User>({ name: '', country: '', email: '', password: '', confirmPassword: '' });
   const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<User>({});
+  const navigate = useNavigate();
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setUser({ ...user, [e.target.name]: e.target.value });
   };
 
+  const validateForm = () => {
+    const errors: User = {};
+    let isValid = true;
+
+    if (!user.name) {
+      errors.name = 'Name is required';
+      isValid = false;
+    }
+
+    if (!user.country) {
+      errors.country = 'Country is required';
+      isValid = false;
+    }
+
+    if (!user.email) {
+      errors.email = 'Email is required';
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(user.email)) {
+      errors.email = 'Email address is invalid';
+      isValid = false;
+    }
+
+    if (!user.password) {
+      errors.password = 'Password is required';
+      isValid = false;
+    } else if (user.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+      isValid = false;
+    }
+
+    if (!user.confirmPassword) {
+      errors.confirmPassword = 'Confirm Password is required';
+      isValid = false;
+    } else if (user.confirmPassword !== user.password) {
+      errors.confirmPassword = 'Passwords do not match';
+      isValid = false;
+    }
+
+    setErrors(errors);
+    return isValid;
+  };
+
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(user);
+    if (validateForm()) {
+      // Здесь можно добавить логику для отправки данных на сервер
+      console.log('Form submitted:', user);
+      navigate('/'); // Переход на главную страницу
+    }
   };
 
   return (
@@ -53,34 +102,101 @@ const Signup = () => {
       </Stack>
       <Divider sx={{ my: 3 }}>or Signup with</Divider>
       <Stack onSubmit={handleSubmit} component="form" direction="column" gap={2}>
-        <TextField id="name" name="name" type="text" value={user.name}
-          onChange={handleInputChange} variant="filled"
-          placeholder="Your Name" autoComplete="name"
-          fullWidth autoFocus required
+        <TextField
+          id="name"
+          name="name"
+          type="text"
+          value={user.name}
+          onChange={handleInputChange}
+          variant="filled"
+          placeholder="Your Name"
+          autoComplete="name"
+          fullWidth
+          autoFocus
+          required
+          error={!!errors.name}
+          helperText={errors.name}
         />
-        <Select labelId="country" id="country" value="country1">
-          <MenuItem value="country1">Russia</MenuItem>
-          <MenuItem value="country2">Kazakhstan</MenuItem>
-          <MenuItem value="country3">China</MenuItem>
+        <Select
+          labelId="country"
+          id="country"
+          name="country"
+          value={user.country}
+          onChange={(e) => setUser({ ...user, country: e.target.value as string })}
+          variant="filled"
+          fullWidth
+          required
+          error={!!errors.country}
+        >
+          <MenuItem value="Russia">Russia</MenuItem>
+          <MenuItem value="Kazakhstan">Kazakhstan</MenuItem>
+          <MenuItem value="China">China</MenuItem>
         </Select>
         <TextField
-          id="email" name="email" type="email" value={user.email}
-          onChange={handleInputChange} variant="filled"
-          placeholder="Your Email" autoComplete="email"
-          fullWidth autoFocus required
+          id="email"
+          name="email"
+          type="email"
+          value={user.email}
+          onChange={handleInputChange}
+          variant="filled"
+          placeholder="Your Email"
+          autoComplete="email"
+          fullWidth
+          autoFocus
+          required
+          error={!!errors.email}
+          helperText={errors.email}
         />
         <TextField
-          id="password" name="password"
+          id="password"
+          name="password"
           type={showPassword ? 'text' : 'password'}
-          value={user.password} onChange={handleInputChange}
-          variant="filled" placeholder="Your Password"
-          autoComplete="current-password" fullWidth autoFocus required
+          value={user.password}
+          onChange={handleInputChange}
+          variant="filled"
+          placeholder="Your Password"
+          autoComplete="current-password"
+          fullWidth
+          autoFocus
+          required
+          error={!!errors.password}
+          helperText={errors.password}
           InputProps={{
             endAdornment: (
               <InputAdornment position="end" sx={{ opacity: user.password ? 1 : 0 }}>
-                <IconButton aria-label="toggle password visibility"
+                <IconButton
+                  aria-label="toggle password visibility"
                   onClick={() => setShowPassword(!showPassword)}
-                  edge="end" >
+                  edge="end"
+                >
+                  <IconifyIcon icon={showPassword ? 'ion:eye' : 'ion:eye-off'} />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+        <TextField
+          id="confirm-password"
+          name="confirmPassword"
+          type={showPassword ? 'text' : 'password'}
+          value={user.confirmPassword}
+          onChange={handleInputChange}
+          variant="filled"
+          placeholder="Confirm Password"
+          autoComplete="confirm-password"
+          fullWidth
+          autoFocus
+          required
+          error={!!errors.confirmPassword}
+          helperText={errors.confirmPassword}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end" sx={{ opacity: user.confirmPassword ? 1 : 0 }}>
+                <IconButton
+                  aria-label="toggle password visibility"
+                  onClick={() => setShowPassword(!showPassword)}
+                  edge="end"
+                >
                   <IconifyIcon icon={showPassword ? 'ion:eye' : 'ion:eye-off'} />
                 </IconButton>
               </InputAdornment>
