@@ -6,21 +6,44 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import paths from 'routes/paths';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   [key: string]: string;
 }
 
-const Login = () => {
-  const [user, setUser] = useState<User>({ email: ''});
+const ForgotPassword = () => {
+  const [user, setUser] = useState<User>({ email: '' });
+  const [errors, setErrors] = useState<User>({});
+  const navigate = useNavigate();
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setUser({ ...user, [e.target.name]: e.target.value });
   };
 
+  const validateForm = () => {
+    const errors: User = {};
+    let isValid = true;
+
+    if (!user.email) {
+      errors.email = 'Email is required';
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(user.email)) {
+      errors.email = 'Email address is invalid';
+      isValid = false;
+    }
+
+    setErrors(errors);
+    return isValid;
+  };
+
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(user);
+    if (validateForm()) {
+      // Здесь можно добавить логику для отправки данных на сервер
+      console.log('Form submitted:', user);
+      navigate(paths.resetPassword); // Переход на страницу сброса пароля
+    }
   };
 
   return (
@@ -43,6 +66,8 @@ const Login = () => {
           fullWidth
           autoFocus
           required
+          error={!!errors.email}
+          helperText={errors.email}
         />
         <Button type="submit" variant="contained" size="medium" fullWidth>
           Submit
@@ -61,4 +86,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default ForgotPassword;

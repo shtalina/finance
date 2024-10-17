@@ -11,6 +11,7 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import IconifyIcon from 'components/base/IconifyIcon';
 import paths from 'routes/paths';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   [key: string]: string;
@@ -19,14 +20,44 @@ interface User {
 const Login = () => {
   const [user, setUser] = useState<User>({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<User>({});
+  const navigate = useNavigate();
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setUser({ ...user, [e.target.name]: e.target.value });
   };
 
+  const validateForm = () => {
+    const errors: User = {};
+    let isValid = true;
+
+    if (!user.email) {
+      errors.email = 'Email is required';
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(user.email)) {
+      errors.email = 'Email address is invalid';
+      isValid = false;
+    }
+
+    if (!user.password) {
+      errors.password = 'Password is required';
+      isValid = false;
+    } else if (user.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+      isValid = false;
+    }
+
+    setErrors(errors);
+    return isValid;
+  };
+
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(user);
+    if (validateForm()) {
+      // Здесь можно добавить логику для отправки данных на сервер
+      console.log('Form submitted:', user);
+      navigate('/'); // Переход на главную страницу
+    }
   };
 
   return (
@@ -66,6 +97,8 @@ const Login = () => {
           fullWidth
           autoFocus
           required
+          error={!!errors.email}
+          helperText={errors.email}
         />
         <TextField
           id="password"
@@ -79,6 +112,8 @@ const Login = () => {
           fullWidth
           autoFocus
           required
+          error={!!errors.password}
+          helperText={errors.password}
           InputProps={{
             endAdornment: (
               <InputAdornment position="end" sx={{ opacity: user.password ? 1 : 0 }}>
