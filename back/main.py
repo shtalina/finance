@@ -3,22 +3,18 @@ from fastapi import Depends, FastAPI, HTTPException
 from database import SessionLocal, engine
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-
+import crud
 import models
 import schemas
-
+from db import get_db 
 from helpers import generate_token
 import datetime
+from auth_service import user_auth
+
+
 
 models.Base.metadata.create_all(bind=engine)
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
+ 
 app = FastAPI()
 
 @app.get("/")
@@ -26,76 +22,24 @@ def read_root():
     return {"hello":"World"}
 
 @app.post("/registration")
-def registration(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    user_old= db.query(models.User).filter(models.User.email == user.email).first()
-    if user_old:
-        raise HTTPException(status_code=400, detail="Email должен быть уникальным")
-
-    try:
-        fake_hashed_password=user.password + "soli"
-        db_user=models.User(
-            email=user.email,
-            username=user.username,
-            password=fake_hashed_password,
-            state_id=user.state_id
-        )
-        db.add(db_user)
-        db.commit()
-        db.refresh(db_user)
-        db_koshelka=models.Koshelka(
-            valuta_id = db.execute(select(models.State).where(models.State.id == db_user.state_id)).scalar_one_or_none().default_valuta_id,
-            user_id=db_user.id
-        )
-        db.add(db_koshelka)
-        db.commit()
-        return db_user
-    except:
-        raise HTTPException(status_code=400, detail="Что-то пошло не так")
+def registration(user: schemas.UserCreate, db: Session = Depends(get_db)):   
+    if crud.existence_email(db=db, email=user.email):
+       raise HTTPException(status_code=400, detail="Email должен быть уникальным") 
+    db_user=crud.create_user(db=db, user=user)
+    valuta_id=crud.get_default_valuta(db=db, state_id=user.state_id)
+    db_koshelka=crud.create_koshelka(db=db,koshelka={"user_id": db_user.id, "valuta_id": valuta_id})
+    return db_user
     
-    # user = db.query(models.User).filter(models.User.email == email).first()
-
-    # return {'status':True}
-
-@app.get("/users")
-def users(db: Session = Depends(get_db)):
-    return db.query(models.User).all()
-
 @app.post("/auth")
-def auth(email: str, password: str, db: Session = Depends(get_db)):
-    now_time=datetime.datetime.now
-    later_time=now_time-datetime.timedelta(minutes=5)
-    limit = 5
-
-    db_user_log=models.UserLoggin(
-            email=email,
-            created_at=now_time
-        )
-    db.add(db_user_log)
-    db.commit()
-
-    user_logs = db.query(models.UserLoggin).filter(
-        models.UserLoggin.email == email,
-        models.UserLoggin.create_at >= later_time,
-    ).all()
-    
-    if len(user_logs) >=limit:
+def auth(user:schemas.authUser, db: Session = Depends(get_db)):
+    limit_time_min=5
+    user_log = schemas.UserBase(email=user.email)
+    db_user_log=crud.create_user_loggin(db=db, user_log=user_log)
+    user_logs_by_time = crud.user_logs_by_time(db=db,time_min=limit_time_min,email=user.email)
+    limit_attempts = 5
+    if len(user_logs_by_time) >=limit_attempts:
         raise HTTPException(status_code=404, detail="Использованы все попытки")
-
-    fake_hashed_password=password + "soli"
-    user = db.query(models.User).filter(
-        models.User.email == email,
-        models.User.password == fake_hashed_password,
-    ).first()
-
-    if not user:
-        
-        raise HTTPException(status_code=400, detail="Пользователь не был найден")
-
-    new_token=generate_token()
-    user.token=new_token
-    db.commit()
-    db.refresh(user)
-
+    user=crud.auth(db=db, user=user)
     return user
 
 @app.post("/restore_password")
@@ -115,23 +59,19 @@ def restore_password(email: str, db: Session = Depends(get_db)):
 
 
 @app.post("/restore_account")
-def restore_account(
-        restore_token: str, 
-        new_password: str, 
-        new_password_confirm: str, 
-        db: Session = Depends(get_db),
-    ):
+def restore_account(restore:schemas.RestoreAccount, db: Session = Depends(get_db),):
+    
     user = db.query(models.User).filter(
-        models.User.restore_token == restore_token,
+        models.User.restore_token == restore.restore_token,
     ).first()
 
     if not user:
         raise HTTPException(status_code=400, detail='User not found')
     
-    if new_password != new_password_confirm:
+    if restore.new_password != restore.new_password_confirm:
         raise HTTPException(status_code=400, detail='Пароли не совпадают')
 
-    fake_hashed_password = new_password + "soli"
+    fake_hashed_password = restore.new_password + "soli"
     user.password = fake_hashed_password
     user.restore_token = None
 
@@ -143,10 +83,10 @@ def restore_account(
     }
 
 @app.post("/states_create")
-def states_create(name: str, default_valuta_id: int, db: Session = Depends(get_db)):
+def states_create(state: schemas.StateCreate, db: Session = Depends(get_db)):
     db_state=models.State(
-        name=name,
-        default_valuta_id=default_valuta_id,
+        name=state.name,
+        default_valuta_id=state.default_valuta_id,
     )
     db.add(db_state)
     db.commit()
@@ -163,6 +103,16 @@ def valuta_create(name: str, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_valuta)
     return db_valuta
+
+@app.post("/create_koshelka", response_model=schemas.KoshelkaCreate)
+async def create_koshelka(
+        koshelka: schemas.KoshelkaCreate, 
+        db: Session = Depends(get_db),
+        user = Depends(user_auth),  # noqa: inject user to check auth
+    ):
+
+    koshelka.user_id = user.id
+    return crud.create_koshelka(db=db, koshelka=koshelka)
 
 
 # Статистика
@@ -181,8 +131,10 @@ def statistik(koshelka_id:int, db: Session = Depends(get_db)):
     return stat
 
 
-
-
+# Просмотр таблиц
+@app.get("/users")
+def users(db: Session = Depends(get_db)):
+    return db.query(models.User).all()
 
 @app.get("/states")
 def states(db: Session = Depends(get_db)):
@@ -192,9 +144,13 @@ def states(db: Session = Depends(get_db)):
 def valuts(db: Session = Depends(get_db)):
     return db.query(models.Valuta).all()
 
-
-@app.get("/koshelki")
-def koshelki(db: Session = Depends(get_db)):
+@app.get("/koshelki", response_model=schemas.KoshelkaCreate)
+async def koshelki(
+        koshelka: schemas.KoshelkaCreate, 
+        db: Session = Depends(get_db),
+        user = Depends(user_auth),  # noqa: inject user to check auth
+    ):
+    koshelka.user_id = user.id
     return db.query(models.Koshelka).all()
 
 @app.get("/user_log")
