@@ -1,25 +1,27 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 import models
 import schemas
 from fastapi import Depends, FastAPI, HTTPException
 import datetime
 from helpers import generate_token
 
+
 def fake_hashed_password(password:str):
     fake_hashed_password = password + "soli"
     return fake_hashed_password
   
-def existence_email(db: Session, email: schemas.UserBase):
-    user_old = db.query(models.User).filter(models.User.email == email.email).first()
+def existence_email(db: Session, email: str):
+    user_old = db.query(models.User).filter(models.User.email == email).first()
     return user_old
 
 def create_user(db: Session, user: schemas.UserCreate):
     try:
-        fake_hashed_password=fake_hashed_password(user.password)
+        fake_password=fake_hashed_password(user.password)
         db_user=models.User(
             email=user.email,
             username=user.username,
-            password=fake_hashed_password,
+            password=fake_password,
             state_id=user.state_id
         )
         db.add(db_user)
@@ -36,22 +38,22 @@ def get_default_valuta(db:Session,state_id: int):
     except:
         raise HTTPException(status_code=400, detail="ошибка при определении дефолтной валюты")
     
-def create_koshelka(db:Session, koshelka:schemas.KoshelkaCreate):
-    return True
-    try:
-        db_koshelka=models.Koshelka(
-            valuta_id = koshelka.valuta_id,
-            user_id = koshelka.user_id
-        )
-        db.add(db_koshelka)
-        db.commit()
-        db.refresh(db_koshelka)
-        return db_koshelka
-    except:
-        raise HTTPException(status_code=400, detail="ошибка при создании кошелька")
+def create_koshelka(db:Session, koshelka: schemas.KoshelkaCreate):
+    # return True
+    # try:
+    db_koshelka=models.Koshelka(
+    valuta_id = koshelka.get('valuta_id'),
+    user_id = koshelka.get('user_id'),
+    )
+    db.add(db_koshelka)
+    db.commit()
+    db.refresh(db_koshelka)
+    return db_koshelka
+    #except:
+    #    raise HTTPException(status_code=400, detail="ошибка при создании кошелька")
 
 def create_user_loggin(db: Session, user_log: schemas.UserBase):
-    return True
+    # return True
     try:
         db_user_log=models.UserLoggin(
             email=user_log.email,
@@ -92,5 +94,3 @@ def auth(db: Session,user:schemas.authUser):
     except:
         raise HTTPException(status_code=400, detail="ошибка при авторизации")
         
-
-
