@@ -10,6 +10,7 @@ from db import get_db
 from helpers import generate_token
 import datetime
 from auth_service import user_auth
+from fastapi.middleware.cors import CORSMiddleware
 
 
 
