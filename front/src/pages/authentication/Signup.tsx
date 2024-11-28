@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, FormEvent } from 'react';
+import { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
@@ -9,25 +9,52 @@ import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import IconifyIcon from 'components/base/IconifyIcon';
 import paths from 'routes/paths';
-import { MenuItem, Select } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
+
 interface User {
-  [key: string]: string;
+  name: string;
+  country: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
 }
 
 const Signup = () => {
-  const [user, setUser] = useState<User>({ name: '', country: '', email: '', password: '', confirmPassword: '' });
+  const [user, setUser] = useState<User>({
+    name: '',
+    country: '', // Устанавливаем начальное значение в пустую строку
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [countries, setCountries] = useState<{ id: string, name: string }[]>([]);
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<User>({});
+  const [errors, setErrors] = useState<Partial<User>>({});
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/states');
+        const data = await response.json();
+        setCountries(data);
+        // Устанавливаем дефолтное значение после загрузки данных
+        setUser((prevUser) => ({ ...prevUser, country: data[0]?.id || '' }));
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+    fetchData();
+  }, []); // Пустой массив зависимостей означает, что эффект будет выполнен только при монтировании компонента
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setUser({ ...user, [e.target.name]: e.target.value });
   };
 
   const validateForm = () => {
-    const errors: User = {};
+    const errors: Partial<User> = {};
     let isValid = true;
 
     if (!user.name) {
@@ -117,7 +144,7 @@ const Signup = () => {
           error={!!errors.name}
           helperText={errors.name}
         />
-        <Select
+        {/* <Select
           labelId="country"
           id="country"
           name="country"
@@ -128,10 +155,29 @@ const Signup = () => {
           required
           error={!!errors.country}
         >
-          <MenuItem value="Russia">Russia</MenuItem>
-          <MenuItem value="Kazakhstan">Kazakhstan</MenuItem>
-          <MenuItem value="China">China</MenuItem>
-        </Select>
+          <MenuItem value="1">Russia</MenuItem>
+          <MenuItem value="2">Kazakhstan</MenuItem>
+          <MenuItem value="3">China</MenuItem>
+        </Select> */}
+        <FormControl variant="filled" fullWidth required error={!!errors.country}>
+          <InputLabel id="country-label">Country</InputLabel>
+          <Select
+            labelId="country-label"
+            id="country"
+            name="country"
+            value={user.country}
+            onChange={(e) => setUser({ ...user, country: e.target.value as string })}
+            variant="filled"
+            fullWidth
+            required
+          >
+            {countries.map((country) => (
+              <MenuItem key={country.id} value={country.id}>
+                {country.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         <TextField
           id="email"
           name="email"
