@@ -9,9 +9,9 @@ import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import IconifyIcon from 'components/base/IconifyIcon';
 import paths from 'routes/paths';
-import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-
+import { FormControl, MenuItem, Select } from '@mui/material';
+// import { useNavigate } from 'react-router-dom';
+import { BASE_DOMAIN } from 'config';
 
 interface User {
   name: string;
@@ -32,16 +32,16 @@ const Signup = () => {
   const [countries, setCountries] = useState<{ id: string, name: string }[]>([]);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Partial<User>>({});
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/states');
+        const response = await fetch(`${BASE_DOMAIN}/states`);
         const data = await response.json();
         setCountries(data);
         // Устанавливаем дефолтное значение после загрузки данных
-        setUser((prevUser) => ({ ...prevUser, country: data[0]?.id || '' }));
+        // setUser((prevUser) => ({ ...prevUser, country: data[0]?.id || '' }));
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -100,7 +100,33 @@ const Signup = () => {
     if (validateForm()) {
       // Здесь можно добавить логику для отправки данных на сервер
       console.log('Form submitted:', user);
-      navigate('/'); // Переход на главную страницу
+      const user_data = {
+        'username': user.name,
+        'state_id': user.country,
+        'email': user.email,
+        'password': user.password,
+      }
+      // navigate('/'); // Переход на главную страницу
+      const send_data = async () => {
+        try {
+          // console.log(user_data);
+          const res = await fetch(`${BASE_DOMAIN}/registration`, {
+            method: "POST",
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(user_data),            
+          })
+          console.log(res);
+          // const response = await fetch(`${BASE_DOMAIN}/states`);
+          // const data = await response.json();
+          // Устанавливаем дефолтное значение после загрузки данных
+          // setUser((prevUser) => ({ ...prevUser, country: data[0]?.id || '' }));
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      }
+      send_data();
     }
   };
 
@@ -160,7 +186,6 @@ const Signup = () => {
           <MenuItem value="3">China</MenuItem>
         </Select> */}
         <FormControl variant="filled" fullWidth required error={!!errors.country}>
-          <InputLabel id="country-label">Country</InputLabel>
           <Select
             labelId="country-label"
             id="country"

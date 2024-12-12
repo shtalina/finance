@@ -2,13 +2,14 @@ export const rootPaths = {
   root: '/',
   pagesRoot: 'pages',
   authRoot: 'authentication',
+  userRoot: 'users',
   errorRoot: 'error',
 };
 
 export default {
   dashboard: `/${rootPaths.pagesRoot}/dashboard`,
   features: `/${rootPaths.pagesRoot}/features`,
-  users: `/${rootPaths.pagesRoot}/users`,
+  users: `/${rootPaths.userRoot}/list`, //
   pricing: `/${rootPaths.pagesRoot}/pricing`,
   integrations: `/${rootPaths.pagesRoot}/integrations`,
   settings: `/${rootPaths.pagesRoot}/settings`,
