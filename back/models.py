@@ -28,7 +28,6 @@ class UserLoggin(Base):
 class  Income(Base):
     __tablename__ = "app_income"
     id = Column(Integer, primary_key=True)
-    type = Column(String, nullable=False)  
     category_income_id = Column(Integer, ForeignKey('app_category_income.id'), nullable=False)  
     koshelka_id = Column(String, ForeignKey('app_koshelkas.id'), nullable=False)  
     count = Column(Float, nullable=False)
@@ -36,9 +35,8 @@ class  Income(Base):
 
 class  Expenses(Base):
     __tablename__ = "app_expenses"
-    id = Column(Integer, primary_key=True)
-    type = Column(String, nullable=False)  
-    category_expenses_id = Column(Integer, ForeignKey('app_category_income.id'), nullable=False)  
+    id = Column(Integer, primary_key=True) 
+    category_expenses_id = Column(Integer, ForeignKey('app_category_expenses.id'), nullable=False)  
     koshelka_id = Column(String, ForeignKey('app_koshelkas.id'), nullable=False)  
     count = Column(Float, nullable=False)
     created_at = Column(DateTime)
@@ -46,11 +44,13 @@ class  Expenses(Base):
 class  Category_income(Base):
     __tablename__ = "app_category_income"
     id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('app_users.id'), nullable=False)
     category_name = Column(String, nullable=False)
 
 class  Category_expenses(Base):
     __tablename__ = "app_category_expenses"
     id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('app_users.id'), nullable=False)
     category_name = Column(String, nullable=False)
 
 # Гос-во
@@ -64,7 +64,7 @@ class Koshelka(Base):
     __tablename__ = "app_koshelkas"
     id = Column(Integer, primary_key=True)
     valuta_id=Column(Integer, ForeignKey('app_valuta.id'), nullable=False)
-    cash=Column(Float, default=0)
+    # cash=Column(Float, default=0)
     user_id=Column(Integer, ForeignKey('app_users.id'), nullable=False)
 
 class Valuta(Base):

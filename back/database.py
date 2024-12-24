@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 SQLALCHEMY_DATABASE_URL = os.getenv('DATABASE_URL')
-#SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
+# SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
  
 # создание движка
 engine = create_engine(

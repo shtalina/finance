@@ -10,7 +10,22 @@ from helpers import generate_token
 def fake_hashed_password(password:str):
     fake_hashed_password = password + "soli"
     return fake_hashed_password
-  
+
+def koshelka_this_user(db:Session,koshelka_id:int,user_id:int):
+    koshelka_this_user = db.query(models.Koshelka).filter(
+        models.Koshelka.user_id == user_id,
+        models.Koshelka.id == koshelka_id
+    ).first()
+    if not koshelka_this_user:
+        raise HTTPException(status_code=400, detail='Не ваш кошелёк')
+    return True
+
+def valuta_name(db:Session,koshelka_id:int):
+    id_valuta=db.query(models.Koshelka).filter(models.Koshelka.id==koshelka_id).first().valuta_id
+    name_valuta=db.query(models.Valuta).filter(models.Valuta.id==id_valuta).first().name
+    return name_valuta
+
+
 def existence_email(db: Session, email: str):
     user_old = db.query(models.User).filter(models.User.email == email).first()
     return user_old
@@ -22,7 +37,8 @@ def create_user(db: Session, user: schemas.UserCreate):
             email=user.email,
             username=user.username,
             password=fake_password,
-            state_id=user.state_id
+            state_id=user.state_id,
+            token=generate_token()
         )
         db.add(db_user)
         db.commit()
@@ -37,20 +53,25 @@ def get_default_valuta(db:Session,state_id: int):
         return valuta_id
     except:
         raise HTTPException(status_code=400, detail="ошибка при определении дефолтной валюты")
-    
+
+def exists_valuta(db:Session, id:int):
+    valuta = db.query(models.Valuta).filter(
+        models.Valuta.id == id,
+    ).first()
+    if not valuta:
+        raise HTTPException(status_code=400, detail='Нет такой валюты')
+    return True 
+
 def create_koshelka(db:Session, koshelka: schemas.KoshelkaCreate):
-    # return True
-    # try:
+    exists=exists_valuta(db=db, id=koshelka.valuta_id)
     db_koshelka=models.Koshelka(
-    valuta_id = koshelka.get('valuta_id'),
-    user_id = koshelka.get('user_id'),
+    valuta_id = koshelka.valuta_id,
+    user_id = koshelka.user_id,
     )
     db.add(db_koshelka)
     db.commit()
     db.refresh(db_koshelka)
     return db_koshelka
-    #except:
-    #    raise HTTPException(status_code=400, detail="ошибка при создании кошелька")
 
 def create_user_loggin(db: Session, user_log: schemas.UserBase):
     # return True
