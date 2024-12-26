@@ -11,7 +11,8 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import IconifyIcon from 'components/base/IconifyIcon';
 import paths from 'routes/paths';
-import { useNavigate } from 'react-router-dom';
+//import { useNavigate } from 'react-router-dom';
+import { BASE_DOMAIN } from 'config';
 
 interface User {
   [key: string]: string;
@@ -21,7 +22,7 @@ const Login = () => {
   const [user, setUser] = useState<User>({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<User>({});
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setUser({ ...user, [e.target.name]: e.target.value });
@@ -56,7 +57,31 @@ const Login = () => {
     if (validateForm()) {
       // Здесь можно добавить логику для отправки данных на сервер
       console.log('Form submitted:', user);
-      navigate('/'); // Переход на главную страницу
+      const user_data = {
+        'username': user.name,
+        'password': user.password,
+      }
+      // navigate('/'); // Переход на главную страницу
+      const send_data = async () => {
+        try {
+          // console.log(user_data);
+          const res = await fetch(`${BASE_DOMAIN}/auth`, {
+            method: "POST",
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(user_data),            
+          })
+          console.log(res);
+          // const response = await fetch(`${BASE_DOMAIN}/states`);
+          // const data = await response.json();
+          // Устанавливаем дефолтное значение после загрузки данных
+          // setUser((prevUser) => ({ ...prevUser, country: data[0]?.id || '' }));
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      }
+      send_data();
     }
   };
 
